@@ -1,9 +1,12 @@
+import 'dotenv/config';
+import { dirname, join } from 'path';
+import { DOMImplementation, DOMParser, XMLSerializer } from '@xmldom/xmldom';
+import { Fiel, FielRequestBuilder, HttpsWebClient, Service } from '@nodecfdi/sat-ws-descarga-masiva';
+import { fileURLToPath } from "url";
+import { install } from '@nodecfdi/cfdiutils-common';
+import { readFileSync } from 'fs';
 import express from "express";
 
-import { readFileSync } from 'fs';
-import { Fiel, HttpsWebClient, FielRequestBuilder, Service } from '@nodecfdi/sat-ws-descarga-masiva';
-import { install } from '@nodecfdi/cfdiutils-common';
-import { DOMParser, XMLSerializer, DOMImplementation } from '@xmldom/xmldom';
 
 const app = express();
 const port = 3000 || process.env.PORT
@@ -11,14 +14,18 @@ const port = 3000 || process.env.PORT
 //instala tu gestor de DOM preferido para este ejemplo se usa @xmldom/xmldom
 install(new DOMParser(), new XMLSerializer(), new DOMImplementation());
 
-const cerPath ='D:\\Desarrollo\\nodecdfi\\src\\_fiel\\OEOO760411SQ6.cer';
-const keyPath ='D:\\Desarrollo\\nodecdfi\\src\\_fiel\\OEOO760411SQ6.key';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const cerPath = join(__dirname, '_fiel', process.env.CERPATH);
+const keyPath = join(__dirname, '_fiel', process.env.KEYPATH);
+const passwordPath = join(__dirname, '_fiel', process.env.PASSWORDPATH);
 
 // Creación de la FIEL, puede leer archivos DER (como los envía el SAT) o PEM (convertidos con openssl)
 const fiel = Fiel.create(
     readFileSync(cerPath, 'binary'),
     readFileSync(keyPath, 'binary'),
-    'OSCARO8A'
+    readFileSync(passwordPath, 'binary')
 );
 // verificar que la FIEL sea válida (no sea CSD y sea vigente acorde a la fecha del sistema)
 if (!fiel.isValid()) {
