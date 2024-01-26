@@ -75,6 +75,9 @@ export const descargaMasivaCdfi = async (req, res) => {
       statusRequest.isTypeOf('Failure') ||
       statusRequest.isTypeOf('Rejected')
     ) {
+      res.status(400).json({
+        message:'La solictud no se puede completar verifique los datos enviados'
+      })
       console.log(`La solicitud ${requestId} no se puede completar`);
       return;
     }
