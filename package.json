@@ -15,6 +15,7 @@
   "dependencies": {
     "@nodecfdi/sat-ws-descarga-masiva": "^0.1.4",
     "@xmldom/xmldom": "^0.8.10",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "fs": "^0.0.1-security"
