@@ -87,6 +87,9 @@ export const descargaMasivaCdfi = async (req, res) => {
       return;
     }
     if (statusRequest.isTypeOf('Finished')) {
+      res.status(200).json({
+        message:`La solictud ${requestId} está lista`
+      })
       console.log(`La solicitud ${requestId} está lista`);
     }
 
@@ -104,6 +107,9 @@ export const descargaMasivaCdfi = async (req, res) => {
         continue;
       }
       writeFileSync(`CFDI/${packageId}.zip`, Buffer.from(download.getPackageContent(), 'base64'));
+      res.status(200).json({
+        message:`El paquete ${packageId} se ha almacenado`
+      })
       console.log(`el paquete ${packageId} se ha almacenado`);
       zipFile.push(`CFDI/${packageId}.zip`);
     }
@@ -114,6 +120,9 @@ export const descargaMasivaCdfi = async (req, res) => {
       cfdiReader = await CfdiPackageReader.createFromFile(zipFile[0]);
       console.log('cfdiReader:', cfdiReader, 'Nombre:', cfdiReader.getFilename());
     } catch (error) {
+      res.status(400).json({
+        error:`${error.message}`
+      })
       console.log('Error:', error.message);
       return;
     }

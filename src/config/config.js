@@ -9,4 +9,4 @@ const cerPath = join(baseDir, '_fiel', process.env.CERPATH);
 const keyPath = join(baseDir, '_fiel', process.env.KEYPATH);
 const passwordPath = join(baseDir, '_fiel', process.env.PASSWORDPATH);
 
-export { cerPath, keyPath, passwordPath };
+export { cerPath, keyPath, passwordPath, baseDir};
