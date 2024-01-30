@@ -15,19 +15,7 @@ import { passwordPath, baseDir } from '../config/config.js';
 import { validDate } from '../utils/validator.js';
 import fs from 'fs';
 export const descargaMasivaCdfi = async (req, res) => {
-  // console.log('req.files: ', req.files);
-  // console.log("req.body: ", req.body);
-  // const { password } = req.body;  // Obtén los datos del formulario
-  // console.log("password: ", password);
-  // const dateStart = req.body.dateStart;
-  // const dateEnd = req.body.dateEnd;
 
-  // console.log("dateStart: ", dateStart);
-
-
-  // const certificadoFile = req.files['certificado'][0];
-  // type of file:
-  // console.log("tipo"+certificadoFile.mimetype);
   const passwordFilePath = baseDir + '\\_fiel\\password.txt';
   const password = req.body.password; 
   writeFileSync(passwordFilePath, password, 'utf8');
