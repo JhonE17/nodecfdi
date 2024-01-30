@@ -1,18 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-      rel='stylesheet'
-      href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'
-      integrity='sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z'
-      crossorigin='anonymous'
-    />
-    <title>Descarga Masiva CFDI</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'
+    integrity='sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z' crossorigin='anonymous' />
+  <title>Descarga Masiva CFDI</title>
 </head>
+
 <body>
-    <h1>HOla</h1>
-    
+  <div class="container-fluid  my-5">
+    <form action="http://localhost:3000/api/descarga-masiva-cfdi" method="POST" enctype="multipart/form-data"
+      id="formulario">
+
+      <div class="row my-5">
+        <div class="col d-flex  justify-content-center">
+          <h2> <b>Prueba de CFDI por Fecha </b> </h2>
+        </div>
+      </div>
+
+
+      <div class="row d-flex justify-content-center   py-5">
+
+        <div class="col-6 bg-prmary  ">
+          <h4>Filtros: </h4><br>
+
+          <div class="row my-2">
+            <div class="col">
+              <div class="input-group my-2">
+                <span class="input-group-text">Fecha de Inicio</span>
+                <input id="startDateTime" class="form-control" type="datetime-local" aria-label="With textarea">
+              </div>
+            </div>
+            <div class="col">
+              <div class="input-group my-2">
+                <span class="input-group-text">Fecha de Finalización</span>
+                <input id="endDateTime" class="form-control" type="datetime-local" aria-label="With textarea">
+              </div>
+            </div>
+          </div>
+
+
+
+        </div>
+
+
+
+        <div class="col-1 bg-secondry d-flex justify-content-center">
+          <div class="vertical-line"></div>
+
+        </div>
+
+        <div class="col-4 bg-dangr ">
+          <h4> Credenciales de Prueba: </h4><br>
+          <div class="mb-3 input-group">
+            <label for="exampleInputEmail1" class="input-group-text">Certficado (.cer):</label>
+            <input type="file" accept=".cer" name="certificado" class="form-control" id="inputCert">
+          </div>
+          <div class="mb-3 input-group">
+            <label for="exampleInputEmail1" class="input-group-text" id="inputGroupFileAddon02">Key (.key):</label>
+            <input type="file" accept=".key" name="clave" class="form-control" id="inputKey" aria-label="Upload">
+          </div>
+          <div class="mb-3">
+            <label for="exampleInputPassword1" class="form-label">Contraseña:</label>
+            <input type="password" class="form-control" id="inputPassword">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col d-flex justify-content-center">
+          <button id="buttonSubmit" type="submit" class="btn btn-lg btn-info">Descargar
+          </button>
+        </div>
+      </div>
+
+    </form>
+    <div class="row mt-3">
+      <div class="col-12 text-center alert alert-success d-none fw-font" role="alert" id="alertaMensajeApi">
+        <b>
+          <p id="mensajeAlertaApi"></p>
+        </b>
+      </div>
+    </div>
 </body>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+  }
+
+  .vertical-line {
+    border-right: 1px solid #000;
+    /* Puedes ajustar el color de la línea aquí */
+    height: 100%;
+    margin: 0 5px;
+    padding: 0;
+    /* Ajusta el margen según tus preferencias */
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script>
+
+  $(document).ready(function () {
+    $('#startDateTime').on('change', function () {
+      const startDateTime = new Date($(this).val());
+      $('#endDateTime').attr('min', startDateTime.toISOString().slice(0, 16));
+    });
+
+    $('#endDateTime').on('change', function () {
+      const endDateTime = new Date($(this).val());
+      $('#startDateTime').attr('max', endDateTime.toISOString().slice(0, 16));
+    });
+
+
+  });
+  // function with preventDefault?
+  document.getElementById("buttonSubmit").addEventListener("click", function (event) {
+    event.preventDefault();
+    sendForm();
+  });
+
+  function convertFormat(dateTimePickerValue) {
+    const selectedDateTime = new Date(dateTimePickerValue);
+    const formattedDateTime = selectedDateTime.toISOString().slice(0, 19).replace('T', ' ');
+    return formattedDateTime;
+  }
+  function disabledButton() {
+    document.getElementById("buttonSubmit").disabled = true;
+    document.getElementById("buttonSubmit").innerHTML = "Descargando...";
+
+  }
+  function enabledButton() {
+    document.getElementById("buttonSubmit").disabled = false;
+    document.getElementById("buttonSubmit").innerHTML = "Descargar";
+
+  }
+  function sendForm() {
+
+    // verify if the inputs are empty
+
+    if (document.getElementById("startDateTime").value == "" || document.getElementById("endDateTime").value == "") {
+      alert("Por favor, ingrese las fechas de inicio y finalización.");
+      return;
+    }
+    if (document.getElementById("inputCert").value == "" || document.getElementById("inputKey").value == "" || document.getElementById("inputPassword").value == "") {
+      alert("Por favor, ingrese el certificado, la llave y la contraseña.");
+      return;
+    }
+
+
+    disabledButton();
+
+    const certInput = document.getElementById("inputCert");
+    const keyInput = document.getElementById("inputKey");
+    const passwordInput = document.getElementById("inputPassword");
+
+    const formData = new FormData();
+
+    const dateStart = document.getElementById("startDateTime").value;
+    const dateEnd = document.getElementById("endDateTime").value;
+    const dateStartFormated = convertFormat(dateStart);
+    const dateEndFormated = convertFormat(dateEnd);
+
+    formData.append("certificado", certInput.files[0]);
+    formData.append("clave", keyInput.files[0]);
+    formData.append("password", passwordInput.value);
+    formData.append("dateStart", dateStartFormated);
+    formData.append("dateEnd", dateEndFormated);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('La solicitud ha tardado demasiado tiempo. Por favor, inténtalo de nuevo.'));
+        alert("La solicitud ha tardado demasiado tiempo. Por favor, inténtalo de nuevo.");
+      }, 20000); 
+    });
+    Promise.race([
+      fetch('api/descarga-masiva-cfdi', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          const button = document.createElement('button');
+          const blob = new Blob([Uint8Array.from(atob(data.base64Content), c => c.charCodeAt(0))]);
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = data.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+          document.getElementById("mensajeAlertaApi").innerText = data.message;
+
+          const alerta = document.getElementById("alertaMensajeApi");
+          alerta.classList.remove("d-none");
+          setTimeout(() => {
+            alerta.classList.add("d-none");
+          }, 10000);
+        })
+        .catch(error => alert(error.message)),
+      timeoutPromise
+    ])
+      .catch(error => alert(error.message))
+
+      .finally(function () {
+        enabledButton();
+      })
+
+  };
+
+
+
+
+</script>
+
 </html>

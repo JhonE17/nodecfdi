@@ -9,21 +9,50 @@ import {
   RequestType,
 } from '@nodecfdi/sat-ws-descarga-masiva';
 import { readFileSync, writeFileSync } from 'fs';
-import { cerPath, keyPath, passwordPath } from '../config/config.js';
-import { validDate } from '../utils/validator.js';
+// import { cerPath, keyPath,  } from '../config/config.js';
 
+import { passwordPath, baseDir } from '../config/config.js';
+import { validDate } from '../utils/validator.js';
+import fs from 'fs';
 export const descargaMasivaCdfi = async (req, res) => {
+  // console.log('req.files: ', req.files);
+  // console.log("req.body: ", req.body);
+  // const { password } = req.body;  // Obtén los datos del formulario
+  // console.log("password: ", password);
+  // const dateStart = req.body.dateStart;
+  // const dateEnd = req.body.dateEnd;
+
+  // console.log("dateStart: ", dateStart);
+
+
+  // const certificadoFile = req.files['certificado'][0];
+  // type of file:
+  // console.log("tipo"+certificadoFile.mimetype);
+  const passwordFilePath = baseDir + '\\_fiel\\password.txt';
+  const password = req.body.password; 
+  writeFileSync(passwordFilePath, password, 'utf8');
+
+  const certPath = baseDir + '\\_fiel\\' + req.files.certificado[0].originalname;
+  fs.writeFileSync(certPath, req.files.certificado[0].buffer);
+
+  // Guarda el archivo .key en la carpeta
+  const keyPath = baseDir + '\\_fiel\\' + req.files.clave[0].originalname;
+  fs.writeFileSync(keyPath, req.files.clave[0].buffer);
+
   const { dateStart, dateEnd } = req.body;
   validDate(dateStart, dateEnd);
 
   // Creación de la FIEL, puede leer archivos DER (como los envía el SAT) o PEM (convertidos con openssl)
   const fiel = Fiel.create(
-    readFileSync(cerPath, 'binary'),
+    readFileSync(certPath, 'binary'),
     readFileSync(keyPath, 'binary'),
-    readFileSync(passwordPath, 'binary')
+    readFileSync(passwordFilePath, 'binary')
   );
   // verificar que la FIEL sea válida (no sea CSD y sea vigente acorde a la fecha del sistema)
   if (!fiel.isValid()) {
+    res.status(500).json({
+      error: 'Error FIEL no valida',
+    });
     throw new Error('Error FIEL no valida');
   }
 
@@ -57,6 +86,7 @@ export const descargaMasivaCdfi = async (req, res) => {
   console.log(`Se generó la solicitud ${query.getRequestId()} +  ${query.t}`);
 
   const requestId = query.getRequestId();
+  let base64Content = '';
   try {
     const verify = await service.verify(requestId);
 
@@ -76,7 +106,7 @@ export const descargaMasivaCdfi = async (req, res) => {
       statusRequest.isTypeOf('Rejected')
     ) {
       res.status(400).json({
-        message:'La solictud no se puede completar verifique los datos enviados'
+        message: 'La solictud no se puede completar verifique los datos enviados'
       })
       console.log(`La solicitud ${requestId} no se puede completar`);
       return;
@@ -87,9 +117,7 @@ export const descargaMasivaCdfi = async (req, res) => {
       return;
     }
     if (statusRequest.isTypeOf('Finished')) {
-      res.status(200).json({
-        message:`La solictud ${requestId} está lista`
-      })
+
       console.log(`La solicitud ${requestId} está lista`);
     }
 
@@ -106,10 +134,11 @@ export const descargaMasivaCdfi = async (req, res) => {
         );
         continue;
       }
+      base64Content = download.getPackageContent();
+
       writeFileSync(`CFDI/${packageId}.zip`, Buffer.from(download.getPackageContent(), 'base64'));
-      res.status(200).json({
-        message:`El paquete ${packageId} se ha almacenado`
-      })
+
+
       console.log(`el paquete ${packageId} se ha almacenado`);
       zipFile.push(`CFDI/${packageId}.zip`);
     }
@@ -120,9 +149,7 @@ export const descargaMasivaCdfi = async (req, res) => {
       cfdiReader = await CfdiPackageReader.createFromFile(zipFile[0]);
       console.log('cfdiReader:', cfdiReader, 'Nombre:', cfdiReader.getFilename());
     } catch (error) {
-      res.status(400).json({
-        error:`${error.message}`
-      })
+
       console.log('Error:', error.message);
       return;
     }
@@ -135,8 +162,15 @@ export const descargaMasivaCdfi = async (req, res) => {
     res.status(200).json({
       message: 'Paquete descargado y exportado a XML!',
       name: `${cfdiReader.getFilename()}`,
+      base64Content: base64Content,
     });
+
+    fs.unlinkSync(certPath);
+    fs.unlinkSync(keyPath);
+    fs.unlinkSync(passwordFilePath);
+
   } catch (error) {
     console.error('Error:', error);
   }
+
 };
