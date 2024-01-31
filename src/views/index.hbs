@@ -179,8 +179,8 @@
     formData.append("dateEnd", dateEndFormated);
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error('La solicitud ha tardado demasiado tiempo. Por favor, inténtalo de nuevo.'));
-        alert("La solicitud ha tardado demasiado tiempo. Por favor, inténtalo de nuevo.");
+        reject(new Error('Termino el tiempo de la solicitud, si no se ha completado. Por favor, inténtalo de nuevo.'));
+        alert("Termino el tiempo de la solicitud, si no se ha completado. Por favor, inténtalo de nuevo.");
       }, 20000); 
     });
     Promise.race([
