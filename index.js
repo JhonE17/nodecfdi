@@ -3,10 +3,10 @@ import { DOMImplementation, DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { install } from '@nodecfdi/cfdiutils-common';
 import express from 'express';
 import cors from 'cors';
-import router from './routes/index.js';
+import router from './src/routes/index.js';
 import hbs from 'hbs';
-import { baseDir } from './config/config.js';
-import multerConfig from './utils/multerConfig.js'; 
+import { baseDir } from './src/config/config.js';
+import multerConfig from './src/utils/multerConfig.js'; 
 //import multer from 'multer'; 
 
 const app = express();
