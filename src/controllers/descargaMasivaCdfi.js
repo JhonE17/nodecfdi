@@ -131,7 +131,7 @@ export const descargaMasivaCdfi = async (req, res) => {
        fs.writeFileSync(`${tmpDir}/${packageId}.zip`, Buffer.from(download.getPackageContent(), 'base64'));
 
       console.log(`el paquete ${packageId} se ha almacenado`);
-      zipFile.push(`CFDI/${packageId}.zip`);
+      zipFile.push(`${tmpDir}/${packageId}.zip`);
     }
 
     let cfdiReader;
