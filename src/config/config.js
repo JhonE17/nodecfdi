@@ -9,4 +9,4 @@ const baseDir = join(__dirname, '..');
 // const keyPath = join(baseDir, '_fiel', process.env.KEYPATH);
 // const passwordPath = join(baseDir, '_fiel', process.env.PASSWORDPATH);
 
-export { baseDir};
+export {  baseDir};
