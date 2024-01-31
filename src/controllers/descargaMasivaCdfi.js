@@ -14,6 +14,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { baseDir } from '../config/config.js';
 import { validDate } from '../utils/validator.js';
 import fs from 'fs';
+import tmp from 'tmp';
 export const descargaMasivaCdfi = async (req, res) => {
 
   const passwordFilePath = baseDir + '\\_fiel\\password.txt';
@@ -75,6 +76,8 @@ export const descargaMasivaCdfi = async (req, res) => {
 
   const requestId = query.getRequestId();
   let base64Content = '';
+  let tmpDir = '';
+
   try {
     const verify = await service.verify(requestId);
 
@@ -123,9 +126,9 @@ export const descargaMasivaCdfi = async (req, res) => {
         continue;
       }
       base64Content = download.getPackageContent();
-
-      writeFileSync(`CFDI/${packageId}.zip`, Buffer.from(download.getPackageContent(), 'base64'));
-
+      
+       tmpDir = tmp.dirSync().name;
+       fs.writeFileSync(`${tmpDir}/${packageId}.zip`, Buffer.from(download.getPackageContent(), 'base64'));
 
       console.log(`el paquete ${packageId} se ha almacenado`);
       zipFile.push(`CFDI/${packageId}.zip`);
@@ -144,7 +147,7 @@ export const descargaMasivaCdfi = async (req, res) => {
 
     for await (const map of cfdiReader.cfdis()) {
       for (const [name, content] of map) {
-        writeFileSync(`CFDI/${name}.xml`, Buffer.from(content, 'utf8'));
+        fs.writeFileSync(`${tmpDir}/${name}.xml`, Buffer.from(content, 'utf8'));
       }
     }
     res.status(200).json({
