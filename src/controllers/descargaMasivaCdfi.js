@@ -11,7 +11,7 @@ import {
 import { readFileSync, writeFileSync } from 'fs';
 // import { cerPath, keyPath,  } from '../config/config.js';
 
-import { passwordPath, baseDir } from '../config/config.js';
+import { baseDir } from '../config/config.js';
 import { validDate } from '../utils/validator.js';
 import fs from 'fs';
 export const descargaMasivaCdfi = async (req, res) => {
