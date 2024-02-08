@@ -62,7 +62,7 @@ export const descargaMasivaCdfi = async (req, res) => {
   ).withRequestType(xml);
 
   // presentar la consulta
-  const query = await service.query(request);
+  let query = await service.query(request);
 
   // verificar que el proceso de consulta fue correcto
   if (!query.getStatus().isAccepted()) {
@@ -79,7 +79,7 @@ export const descargaMasivaCdfi = async (req, res) => {
   let tmpDir = '';
 
   try {
-    const verify = await service.verify(requestId);
+    let verify = await service.verify(requestId);
 
     // revisar que el proceso de verificación fue correcto
     if (!verify.getStatus().isAccepted()) {
@@ -90,7 +90,7 @@ export const descargaMasivaCdfi = async (req, res) => {
     }
 
     // revisar el progreso de la generación de los paquetes
-    const statusRequest = verify.getStatusRequest();
+    let statusRequest = verify.getStatusRequest();
     if (
       statusRequest.isTypeOf('Expired') ||
       statusRequest.isTypeOf('Failure') ||
@@ -103,16 +103,39 @@ export const descargaMasivaCdfi = async (req, res) => {
       return;
     }
 
-    if (statusRequest.isTypeOf('InProgress') || statusRequest.isTypeOf('Accepted')) {
+  if (statusRequest.isTypeOf('InProgress') ) {
       console.log(`La solicitud ${requestId} se está procesando`);
-      return;
+      // return;
+    }
+    if(statusRequest.isTypeOf('Accepted')) {
+      console.log(`La solicitud ${requestId} se ha aceptado`);
+
     }
     if (statusRequest.isTypeOf('Finished')) {
-
       console.log(`La solicitud ${requestId} está lista`);
     }
 
     console.log(`Se encontraron ${verify.countPackages()} paquetes`);
+    let intentos = 0;
+
+    // Esperar a que se generen los paquetes
+    while ( statusRequest.isTypeOf('Accepted') && verify.countPackages() === 0 && intentos < 3) {
+        await new Promise(resolve => setTimeout(resolve, 60000));
+        query = await service.query(request);
+        console.log(`La solicitud ${requestId} se está reenviando..`);
+        verify = await service.verify(requestId);
+        statusRequest = verify.getStatusRequest();
+
+        intentos++;
+    }
+
+    // Verificar si se encontraron paquetes después de los intentos
+    if ( statusRequest.isTypeOf('Accepted')&& verify.countPackages() === 0) {
+        res.status(400).json({
+            message: 'No se encontraron paquetes después de varios intentos',
+        });
+        return;
+    }
     let zipFile = [];
 
     const packageID = verify.getPackageIds();
