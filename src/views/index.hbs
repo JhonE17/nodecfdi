@@ -145,7 +145,7 @@
     document.getElementById("buttonSubmit").innerHTML = "Descargar";
 
   }
-  function sendForm() {
+   function sendForm() {
 
     // verify if the inputs are empty
 
@@ -177,46 +177,46 @@
     formData.append("password", passwordInput.value);
     formData.append("dateStart", dateStartFormated);
     formData.append("dateEnd", dateEndFormated);
+    const fetchpromise = fetch('api/descarga-masiva-cfdi', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        const button = document.createElement('button');
+        const blob = new Blob([Uint8Array.from(atob(data.base64Content), c => c.charCodeAt(0))]);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = data.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        document.getElementById("mensajeAlertaApi").innerText = data.message;
+
+        const alerta = document.getElementById("alertaMensajeApi");
+        alerta.classList.remove("d-none");
+        setTimeout(() => {
+          alerta.classList.add("d-none");
+        }, 10000);
+      })
+      .catch(error => alert("Error ID: #237810:",error.message)).finally(function () {
+        enabledButton();
+      });
+
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error('Termino el tiempo de la solicitud, si no se ha completado. Por favor, inténtalo de nuevo.'));
-        alert("Termino el tiempo de la solicitud, si no se ha completado. Por favor, inténtalo de nuevo.");
-      }, 20000); 
+        reject(alert('La solicitud ha tardado demasiado tiempo. Si no tuviste respuesta, espera unos minutos e inténtalo de nuevo.'));
+      }, 60000);
     });
     Promise.race([
-      fetch('api/descarga-masiva-cfdi', {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => response.json())
-        .then(data => {
-          const button = document.createElement('button');
-          const blob = new Blob([Uint8Array.from(atob(data.base64Content), c => c.charCodeAt(0))]);
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = data.name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-
-          document.getElementById("mensajeAlertaApi").innerText = data.message;
-
-          const alerta = document.getElementById("alertaMensajeApi");
-          alerta.classList.remove("d-none");
-          setTimeout(() => {
-            alerta.classList.add("d-none");
-          }, 10000);
-        })
-        .catch(error => alert(error.message)),
+      fetchpromise,
       timeoutPromise
-    ])
-      .catch(error => alert(error.message))
+    ]).catch(error => alert("Error ID: #235912:",error.message));
 
-      .finally(function () {
-        enabledButton();
-      })
+
 
   };
 
