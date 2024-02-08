@@ -209,7 +209,7 @@
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(alert('La solicitud ha tardado demasiado tiempo. Si no tuviste respuesta, espera unos minutos e inténtalo de nuevo.'));
-      }, 60000);
+      }, 240000);
     });
     Promise.race([
       fetchpromise,
